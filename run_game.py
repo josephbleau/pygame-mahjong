@@ -24,24 +24,29 @@ def main():
   while 1:
     if game.state == 'next_level':
       game = Game()
-      
+    
     screen.fill((255,255,255))
+  
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         return
       if event.type == pygame.MOUSEBUTTONDOWN:
-        game.handle_input(event)
+        if editor:
+          game.place_tile(event)
+        else:
+          game.handle_input(event)
       if event.type == pygame.MOUSEMOTION:
         if editor:
           game.move_tile_cursor(event)
       if event.type == pygame.KEYDOWN:
         if editor:
           game.select_cursor_tile(event)
-   
-    if editor:
-      game.draw_tile_cursor(screen)
-    
+     
     game.render(screen)
+  
+    if editor:
+      game.draw_tile_cursor(screen)  
+      
     pygame.display.flip()
         
     time.sleep(.001)  

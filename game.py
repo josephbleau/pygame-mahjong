@@ -1,52 +1,81 @@
 import sys
 import pygame
 import time
+import re
 from time import localtime
 import os.path
 import random
+from random import shuffle
 
 # my imports
 from tile import *
   
 def get_string_surf(font, text):
+  "Used in lazy-man text-writing :)"
   return font.render(text, True, (0,0,0))
   
 def render_text(screen, font, text, (x,y,w,h)):
+  "Lazy-man text-writing."
   screen.blit(get_string_surf(font, text), (x,y,w,h))
+
+def load_level(filename='level.txt', rnd=False, enforceTwo=False):
+  "Loads a level from a text file. If the random flag is set to True \
+   then all tiles are simply random, otherwise use the files tileno's "
+  fh = open(filename, 'rU')
+  if fh:
+    text = fh.read()
+    tiles = []
+    for no,x,y,z in re.findall('[(](\d+),(\d+),(\d+),(\d+)[))]', text):
+     tiles.append(Tile(int(no),int(x),int(y),int(z)))
+    
+    if enforceTwo and len(tiles) % 2 == 0:
+      print 'You are enforcing divisible by two tile rule, and there are an uneven amount of tiles.'
+      return []
+    
+    if rnd:
+      random.seed()
+      for tile in range(0,len(tiles)-1,2):
+        no = random.choice(range(1,9,1))
+        tiles[tile] = Tile(no, tiles[tile].x, tiles[tile].y, tiles[tile].z)
+        tiles[tile+1] = Tile(no, tiles[tile+1].x, tiles[tile+1].y, tiles[tile+1].z)
+    
+    return tiles
+      
+  return []
   
-class Game:
-  def __init__(self):
+class Game:    
+  def __init__(self,editor=False):
     self.state = 'playing'
     self.selected = None
     self.time_started = localtime()
+    
+    # Background Music
     pygame.mixer.music.load('res/bg.mp3')
     pygame.mixer.music.play(loops=-1)
     
+    # Font
     self.fontpath = os.path.abspath('res/ChopinScript.otf')
     self.font = pygame.font.Font(self.fontpath, 42)
-    if self.font:
-      self.game_title_text     = self.font.render("Vanessa Mahjong", True, (0,0,0))
-      self.pieces_removed_text = self.font.render("Pieces Removed: ", True, (0,0,0)) 
-      self.good_job_text       = self.font.render("Good job!", True, (0,0,0))
     
-    #generate tiles, just for testing for now
-    self.tiles = []
+    # Load tiles
     self.pieces_removed = 0
+    self.tiles = load_level(filename='level.txt', rnd=(not editor))
+   
+   #generate tiles, just for testing for now    
+   # offset_x = 200
+   # offset_y = 200
+   # pieces = [n%8+1 for n in range(64)] 
+   # for z in range(8):
+   #   for x in range(4-z/2):
+   #     for y in range(4-z/2):
+   #       choice = random.choice(pieces)
+   #       pieces.remove(choice)
+   #       self.tiles.append(Tile(choice,offset_x + x*40,offset_y +  y*60,z))  
     
-    offset_x = 200
-    offset_y = 200
-    
-    pieces = [n%8+1 for n in range(64)]
-    
-    for z in range(8):
-      for x in range(4-z/2):
-        for y in range(4-z/2):
-          choice = random.choice(pieces)
-          pieces.remove(choice)
-          self.tiles.append(Tile(choice,offset_x + x*40,offset_y +  y*60,z))  
-    
-    print len(pieces)
   def handle_tile_click(self,event):
+    "Send mouse click events to us. We handle selected / unselecting tiles, \
+     match-pairing, and whether or not the matches were valid. This function also handles \
+     state-changing when all tiles are missing. "
     for tile in sorted(self.tiles, key=byTopRight, reverse=True) :
         x,y = event.pos
         if x >= tile.x - tile.z * 3 and x <= tile.x + 40 - tile.z * 3 and \
@@ -95,11 +124,10 @@ class Game:
       return
     elif self.state == 'playing':
       # Draw Title & Score
-      if self.game_title_text:
-        render_text(screen, self.font, "Vanessa Mahjong", (20,20,300,300))
-      if self.pieces_removed_text:
-        render_text(screen, self.font, "Pieces Removed: ", (500,500,200,100))
-        render_text(screen, self.font, str(self.pieces_removed), (550,550,200,50))
+      render_text(screen, self.font, "Vanessa Mahjong", (20,20,300,300))
+      render_text(screen, self.font, "Pieces Removed: ", (500,500,200,100))
+      render_text(screen, self.font, str(self.pieces_removed), (550,550,200,50))
+      
       # Draw all of the tiles on the map.
       for tile in self.tiles:
         tile.draw(screen)
