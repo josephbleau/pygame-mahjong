@@ -129,7 +129,7 @@ class Game:
       pygame.draw.rect(screen,(0,0,0), (0,520,800,80))      
       
       # Draw Title & Score
-      render_text(screen, self.font, "Vanessa Mahjong", (20,20,300,300), color=(255,150,122))
+      render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
       render_text(screen, self.font, "Pieces Removed: ", (20,540,200,100), color=(255,150,122))
       render_text(screen, self.font, str(self.pieces_removed) + ' of ' + str(self.start_piece_count), (300,540,200,50), color=(255,255,255))
       

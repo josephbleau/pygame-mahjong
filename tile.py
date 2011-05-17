@@ -26,6 +26,12 @@ class Tile:
     left = False
     right = False
     for tile in tiles:
+      print self.x, self.y, self.z
+      if (tile.z > self.z and tile.x + 20 == self.x and tile.y - 30 == self.y) or \
+         (tile.z > self.z and tile.x - 20 == self.x and tile.y - 30 == self.y) or \
+         (tile.z > self.z and tile.x + 20 == self.x and tile.y + 30 == self.y) or \
+         (tile.z > self.z and tile.x - 20 == self.x and tile.y + 30 == self.y):
+          return True
       if tile.z > self.z and tile.x + 20 == self.x and tile.y == self.y:
         return True
       if tile.z > self.z and tile.x - 20 == self.x and tile.y == self.y:

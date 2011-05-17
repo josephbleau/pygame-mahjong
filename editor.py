@@ -47,6 +47,11 @@ class Editor(Game):
     if event.button == 1:
       no, x,y,z = self.cursor_tile.tileno, self.cursor_tile.x, self.cursor_tile.y, self.cursor_tile.z
       for tile in self.tiles:
+        if (tile.x + 20 == x and tile.y - 30 == y) or \
+           (tile.x - 20 == x and tile.y - 30 == y) or \
+           (tile.x + 20 == x and tile.y + 30 == y) or \
+           (tile.x - 20 == x and tile.y + 30 == y):
+          z = tile.z + 1
         if tile.x == x and tile.y == y:
           z = tile.z + 1
         if tile.y == y and tile.x + 20 == x:
