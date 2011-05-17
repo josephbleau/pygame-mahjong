@@ -10,13 +10,13 @@ from random import shuffle
 # my imports
 from tile import *
   
-def get_string_surf(font, text):
+def get_string_surf(font, text, color=(0,0,0)):
   "Used in lazy-man text-writing :)"
-  return font.render(text, True, (0,0,0))
+  return font.render(text, True, color)
   
-def render_text(screen, font, text, (x,y,w,h)):
+def render_text(screen, font, text, (x,y,w,h), color=(0,0,0)):
   "Lazy-man text-writing."
-  screen.blit(get_string_surf(font, text), (x,y,w,h))
+  screen.blit(get_string_surf(font, text, color=color), (x,y,w,h))
 
 def load_level(filename='level.txt', rnd=False, enforceTwo=False):
   "Loads a level from a text file. If the random flag is set to True \
@@ -38,7 +38,8 @@ def load_level(filename='level.txt', rnd=False, enforceTwo=False):
         no = random.choice(range(1,9,1))
         tiles[tile] = Tile(no, tiles[tile].x, tiles[tile].y, tiles[tile].z)
         tiles[tile+1] = Tile(no, tiles[tile+1].x, tiles[tile+1].y, tiles[tile+1].z)
-    
+        
+        
     return tiles
       
   return []
@@ -60,7 +61,7 @@ class Game:
     # Load tiles
     self.pieces_removed = 0
     self.tiles = load_level(filename='level.txt', rnd=(not editor))
-   
+    self.start_piece_count = len(self.tiles)
    #generate tiles, just for testing for now    
    # offset_x = 200
    # offset_y = 200
@@ -100,7 +101,7 @@ class Game:
               return
            else:
             if not tile.is_blocked(self.tiles):
-              self.selected = tile        
+              self.selected = tile       
            return
            
            
@@ -123,10 +124,14 @@ class Game:
       self.render_menu(screen)
       return
     elif self.state == 'playing':
+      #Bars
+      pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
+      pygame.draw.rect(screen,(0,0,0), (0,520,800,80))      
+      
       # Draw Title & Score
-      render_text(screen, self.font, "Vanessa Mahjong", (20,20,300,300))
-      render_text(screen, self.font, "Pieces Removed: ", (500,500,200,100))
-      render_text(screen, self.font, str(self.pieces_removed), (550,550,200,50))
+      render_text(screen, self.font, "Vanessa Mahjong", (20,20,300,300), color=(255,150,122))
+      render_text(screen, self.font, "Pieces Removed: ", (20,540,200,100), color=(255,150,122))
+      render_text(screen, self.font, str(self.pieces_removed) + ' of ' + str(self.start_piece_count), (300,540,200,50), color=(255,255,255))
       
       # Draw all of the tiles on the map.
       for tile in self.tiles:

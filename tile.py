@@ -26,15 +26,24 @@ class Tile:
     left = False
     right = False
     for tile in tiles:
+      if tile.z > self.z and tile.x + 20 == self.x and tile.y == self.y:
+        return True
+      if tile.z > self.z and tile.x - 20 == self.x and tile.y == self.y:
+        return True
       if tile.z > self.z and tile.x == self.x and tile.y == self.y:
+        return True
+      if tile.z > self.z and tile.y + 30 == self.y and tile.x == self.x:
+        return True
+      if tile.z > self.z and tile.y - 30 == self.y and tile.x == self.x:
         return True
       if tile.z == self.z and tile.y == self.y:
         if self.x+40 == tile.x:
           right = True
         if tile.x + 40 == self.x:
           left = True
+          
     return left and right
     
 def byTopRight(tiles):
   "Helper function used to sort tiles."
-  return (tiles.z, tiles.x)
+  return (tiles.z, tiles.x, tiles.y)

@@ -25,7 +25,7 @@ def main():
     if game.state == 'next_level':
       game = Game()
     
-    screen.fill((255,255,255))
+    screen.fill((238,221,130))
   
     for event in pygame.event.get():
       if event.type == pygame.QUIT:

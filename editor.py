@@ -51,7 +51,11 @@ class Editor(Game):
           z = tile.z + 1
         if tile.y == y and tile.x + 20 == x:
           z = tile.z + 1
-        if tile.x == x and tile.y + 20 == y:
+        if tile.x == x and tile.y + 30 == y:
+          z = tile.z + 1
+        if tile.x == x and tile.y - 30 == y:
+          z = tile.z + 1
+        if tile.y == y and tile.x - 20 == x:
           z = tile.z + 1
       self.tiles.append(Tile(no,x,y,z))
       
