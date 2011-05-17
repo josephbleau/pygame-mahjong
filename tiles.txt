@@ -1,0 +1,23 @@
+Tiles:
+
+Circle Suit    (1-9) = 9 x 4
+Bamboo Suit    (1-9) = 9 x 4
+Character Suit (1-9) = 9 x 4
+Honor Tiles
+	Wind
+		North       = 4
+		South       = 4
+		East        = 4
+		West        = 4
+	Dragon
+		Red         = 4
+		Green       = 4
+		White       = 4
+	Flower
+		Spring      = 4
+		Summer      = 4
+		Autumn      = 4
+		Winter      = 4
+		
+					 ---
+					 152 Tiles
