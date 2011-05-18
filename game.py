@@ -179,6 +179,10 @@ class Game:
         self.start_piece_count = len(self.tiles)             
       return
     elif self.state == 'playing':
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+        self.state = 'level_select'
+        return
+        
       self.handle_tile_click(event) 
     elif self.state == 'level_complete':
       print '?'

@@ -55,8 +55,7 @@ def main():
         if editor:
           game.move_tile_cursor(event)
       if event.type == pygame.KEYDOWN:
-        if game.state == 'menu' or game.state == 'level_select':
-          game.handle_input(event)
+        game.handle_input(event)
         if editor:
           game.select_cursor_tile(event)
      
