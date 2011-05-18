@@ -18,10 +18,15 @@ def render_text(screen, font, text, (x,y,w,h), color=(0,0,0)):
   "Lazy-man text-writing."
   screen.blit(get_string_surf(font, text, color=color), (x,y,w,h))
 
-def load_level(filename='level.txt', rnd=False, enforceTwo=False):
+def load_level(filename, rnd=False, enforceTwo=False):
   "Loads a level from a text file. If the random flag is set to True \
    then all tiles are simply random, otherwise use the files tileno's "
-  fh = open(filename, 'rU')
+  try:
+    fh = open(os.path.abspath('levels/' + filename), 'r')
+  except IOError, e:
+    open(os.path.abspath('levels/' + filename), 'a')
+  
+  fh = open(os.path.abspath('levels/' + filename), 'r')
   if fh:
     text = fh.read()
     tiles = []
@@ -45,10 +50,15 @@ def load_level(filename='level.txt', rnd=False, enforceTwo=False):
   return []
   
 class Game:    
-  def __init__(self,editor=False):
-    self.state = 'playing'
+  def __init__(self, editor=False):
+    if editor:
+      self.state = 'playing'
+    else:
+      self.state = 'menu'
+    
     self.selected = None
     self.time_started = localtime()
+    self.m_selector = 0 # menu selector
     
     # Background Music
     pygame.mixer.music.load('res/bg.mp3')
@@ -60,7 +70,7 @@ class Game:
     
     # Load tiles
     self.pieces_removed = 0
-    self.tiles = load_level(filename='level.txt', rnd=(not editor))
+    self.tiles = load_level('turtle.txt', rnd=(not editor))
     self.start_piece_count = len(self.tiles)
    #generate tiles, just for testing for now    
    # offset_x = 200
@@ -109,6 +119,48 @@ class Game:
   
   def handle_input(self, event):
     "Based on the games current state, manage our mouse input."
+    if self.state == 'menu':
+      
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+        if self.m_selector == 3:
+          self.m_selector = 0
+        else:
+          self.m_selector += 1
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+        if self.m_selector == 0:
+          self.m_selector = 3
+        else:
+          self.m_selector -= 1
+          
+      # When the user makes a selection
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+        if self.m_selector == 0:
+          self.state = 'level_select'
+          self.m_selector = 0
+          return
+        if self.m_selector == 3:
+          sys.exit()
+          
+    if self.state == 'level_select':
+      max = len(os.listdir(os.path.abspath('levels/')))-1
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
+        if self.m_selector == 0:
+          self.m_selector = max
+        else:
+          self.m_selector -= 1
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
+        if self.m_selector == max:
+          self.m_selector = 0
+        else:
+          self.m_selector += 1
+          
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+        levels = os.listdir(os.path.abspath('levels/'))
+        self.state = 'playing'      
+        self.pieces_removed = 0
+        self.tiles = load_level(filename=levels[self.m_selector], rnd=True)
+        self.start_piece_count = len(self.tiles)             
+      return
     if self.state == 'playing':
       self.handle_tile_click(event)
     if self.state == 'level_complete':
@@ -122,6 +174,28 @@ class Game:
     "Based on the games state, call the appropriate drawing methods"
     if self.state == 'menu':
       self.render_menu(screen)
+      pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
+      pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
+      render_text(screen, self.font, "Vanessa's Mahjong", (300, 120, 300, 300))
+      render_text(screen, self.font, "New Game", (380, 200, 300, 300))
+      render_text(screen, self.font, "High Scores", (380, 250, 300, 300))
+      render_text(screen, self.font, "Settings", (380, 300, 300, 300))
+      render_text(screen, self.font, "Exit Game", (380, 350, 300, 300))
+      
+      render_text(screen, self.font, "->", (350, 200 + self.m_selector * 50, 300, 300))
+      
+      return
+    elif self.state == 'level_select':
+      pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
+      pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
+      render_text(screen, self.font, "Vanessa's Mahjong", (300, 120, 300, 300))
+      render_text(screen, self.font, "Select a level:", (380, 200, 300, 300))
+      i = 0
+      for level in os.listdir(os.path.abspath('levels/')):
+        level = level[:-4]
+        render_text(screen, self.font, level, (410, 250 + i * 50, 300, 300))
+        i += 1
+      render_text(screen, self.font, "->", (370, 250 + self.m_selector * 50, 300, 300 ))
       return
     elif self.state == 'playing':
       #Bars

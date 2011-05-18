@@ -14,7 +14,7 @@ class Editor(Game):
     
   def save_level(self):
     "Writes the current tile list to file."
-    fh = open('level.txt', 'w')
+    fh = open('levels/' + self.filename, 'w')
     if(fh):
       for tile in self.tiles:
         no = tile.tileno
@@ -34,6 +34,11 @@ class Editor(Game):
       self.cursor_tile = Tile(event.key-48,x,y,1)
     if event.unicode == 's':
       self.save_level()
+    if event.unicode == 'u':
+      try:
+        self.tiles.pop()
+      except IndexError, e:
+        pass
     return
     
   def move_tile_cursor(self, event):
