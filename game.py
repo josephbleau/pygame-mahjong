@@ -57,10 +57,11 @@ class Game:
       self.state = 'menu'
     
     self.selected = None
-    self.time_started = localtime()
+    self.time_started = pygame.time.get_ticks()
     self.m_selector = 0 # menu selector
     self.sound = sound
     self.editor = editor
+    self.score = -1
     
     # Background Music
     if self.sound:
@@ -85,6 +86,32 @@ class Game:
    #       choice = random.choice(pieces)
    #       pieces.remove(choice)
    #       self.tiles.append(Tile(choice,offset_x + x*40,offset_y +  y*60,z))  
+  
+  def write_score(self):
+    "Writes to file players high-score based on the time they took \
+     to complete the level. "
+    scorepath = os.path.abspath('levels/scores/')
+    try:
+      fh = open(scorepath +'/'+ self.filename, 'r')
+    except IOError:
+      fh = open(scorepath +'/'+ self.filename, 'a')
+      fh.close()
+      fh = open(scorepath +'/'+ self.filename, 'r')
+      
+    scores = fh.read()
+    scores = re.findall('[(](\w*),(\w*)[)]', scores)
+    
+    scores.append(('player',(pygame.time.get_ticks() - self.time_started)/1000))
+    if scores:
+      scores = sorted(scores, key=lambda s: int(s[01]))
+      
+    fh.close()
+    fh = open(scorepath +'/'+ self.filename, 'w')
+    for score in scores:
+      fh.write('('+str(score[0])+','+str(score[1])+')')
+
+    fh.close()
+  
     
   def handle_tile_click(self,event):
     "Send mouse click events to us. We handle selected / unselecting tiles, \
@@ -105,9 +132,12 @@ class Game:
                 self.tiles.remove(tile)
                 self.pieces_removed += 2
                 
+                # If we won!
                 if len(self.tiles) == 0:
                   self.state = 'level_complete'
                   pygame.event.clear()
+                  
+                  self.write_score()
                   return
               self.selected = None
               return
@@ -157,25 +187,29 @@ class Game:
       max = len(os.listdir(os.path.abspath('levels/')))-1
       if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
         if self.m_selector == 0:
-          self.m_selector = max+1
+          self.m_selector = max
         else:
           self.m_selector -= 1
       if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-        if self.m_selector == max+1:
+        if self.m_selector == max:
           self.m_selector = 0
         else:
           self.m_selector += 1
           
       if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
-        if self.m_selector == max+1: #back button pressed
+        if self.m_selector == max: #back button pressed
           self.state = 'menu'
           self.m_selector = 0
           return
           
         levels = os.listdir(os.path.abspath('levels/'))
-        self.state = 'playing'      
+        if 'scores' in levels:
+          levels.remove('scores')
+        self.state = 'playing'     
+        self.time_started = pygame.time.get_ticks()
         self.pieces_removed = 0
         self.tiles = load_level(filename=levels[self.m_selector], rnd=True)
+        self.filename = levels[self.m_selector]
         self.start_piece_count = len(self.tiles)             
       return
     elif self.state == 'playing':
@@ -185,8 +219,8 @@ class Game:
         
       self.handle_tile_click(event) 
     elif self.state == 'level_complete':
-      print '?'
       if event.type == pygame.MOUSEBUTTONDOWN:
+        self.score = -1
         self.state = 'level_select'
       
   def render_menu(self, screen):
@@ -215,6 +249,8 @@ class Game:
       render_text(screen, self.font, "Select a level:", (380, 200, 300, 300))
       i = 0
       for level in os.listdir(os.path.abspath('levels/')):
+        if level == 'scores':
+          continue
         level = level[:-4]
         render_text(screen, self.font, level, (410, 250 + i * 50, 300, 300))
         i += 1
@@ -240,16 +276,18 @@ class Game:
       # Draw all of the tiles on the map.
       for tile in self.tiles:
         tile.draw(screen)
-        if self.selected:
+        if self.selected: 
           pygame.draw.rect(screen, (255,0,0), (self.selected.x - self.selected.z * 3, \
                                                self.selected.y - self.selected.z * 3, 40-2, 60-2),2)   
     elif self.state == 'level_complete':
-      render_text(screen, self.font, "Sweet!", (325,250,200,100))
-      render_text(screen, self.font, "(Click for next level!)", (20,120,100,100))
       rose = pygame.image.load('res/rose.jpg')
       roserect = [(0,200,318,350),(800-318,100,318,350)]
       screen.blit(rose,roserect[0])
       screen.blit(rose,roserect[1])
+      if self.score == -1:
+        self.score = str((pygame.time.get_ticks()-self.time_started)/1000)
+      render_text(screen, self.font, self.score + " seconds, sweet!", (450,450,200,100))
+      render_text(screen, self.font, "(Click for next level!)", (20,120,100,100))
       pygame.draw.rect(screen,(0,0,0), (0,0,800,100))
       pygame.draw.rect(screen,(0,0,0), (0,500,800,100))
       
