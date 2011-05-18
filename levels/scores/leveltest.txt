@@ -1,1 +1,1 @@
-(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,2)(player,6)
+(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,1)(player,2)(player,3)(player,6)

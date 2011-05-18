@@ -218,6 +218,7 @@ class Game:
       if event.type == pygame.MOUSEBUTTONDOWN:
         self.score = -1
         self.state = 'level_select'
+        self.selected = None
       
   def render_menu(self, screen):
     "Draw the main menu"
