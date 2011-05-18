@@ -117,6 +117,8 @@ class Game:
     "Send mouse click events to us. We handle selected / unselecting tiles, \
      match-pairing, and whether or not the matches were valid. This function also handles \
      state-changing when all tiles are missing. "
+    if event.type == pygame.KEYDOWN:
+      return
     for tile in sorted(self.tiles, key=byTopRight, reverse=True) :
         x,y = event.pos
         if x >= tile.x - tile.z * 3 and x <= tile.x + 40 - tile.z * 3 and \
@@ -214,7 +216,10 @@ class Game:
       return
     elif self.state == 'playing':
       if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-        self.state = 'level_select'
+        if not self.editor:
+          self.state = 'level_select'
+        else:
+          sys.exit()
         return
         
       self.handle_tile_click(event) 
@@ -229,6 +234,11 @@ class Game:
     
   def render(self, screen):
     "Based on the games state, call the appropriate drawing methods"
+    if self.state == 'show_highscores':
+      pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
+      pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
+      render_text(screen, self.font, "Vanessa's Mahjong", (300, 120, 300, 300))
+      
     if self.state == 'menu':
       self.render_menu(screen)
       pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
