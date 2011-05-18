@@ -29,9 +29,9 @@ def main():
       game = Game()
       
     if game.state == 'menu' or game.state == 'level_select':
-      screen.fill((255,150,122))
+      screen.fill((255,255,255))
     if game.state == 'playing':
-      screen.fill((255,150,122))
+      screen.fill((255,255,255))
     if game.state == 'level_complete':
       screen.fill((255,255,255))
       
