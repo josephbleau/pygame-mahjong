@@ -8,8 +8,8 @@ from tile import *
 from game import * 
 
 class Editor(Game):
-  def __init__(self):
-    Game.__init__(self,editor=True)
+  def __init__(self,sound=True):
+    Game.__init__(self,editor=True, sound=sound)
     self.cursor_tile = Tile(1,0,0,1)
     
   def save_level(self):

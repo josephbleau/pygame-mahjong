@@ -50,7 +50,7 @@ def load_level(filename, rnd=False, enforceTwo=False):
   return []
   
 class Game:    
-  def __init__(self, editor=False):
+  def __init__(self, editor=False, sound=True):
     if editor:
       self.state = 'playing'
     else:
@@ -59,10 +59,12 @@ class Game:
     self.selected = None
     self.time_started = localtime()
     self.m_selector = 0 # menu selector
+    self.sound = sound
     
     # Background Music
-    pygame.mixer.music.load('res/bg.mp3')
-    pygame.mixer.music.play(loops=-1)
+    if self.sound:
+      pygame.mixer.music.load('res/bg.mp3')
+      pygame.mixer.music.play(loops=-1)
     
     # Font
     self.fontpath = os.path.abspath('res/ChopinScript.otf')

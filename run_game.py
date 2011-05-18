@@ -15,15 +15,23 @@ def main():
   pygame.display.set_caption("Vanessa's Mahjong, v0.0")
   
   editor = False
-  game = Game()
-  
-  if len(sys.argv) == 3 and sys.argv[1] == '--editor':
+  sound_on  = True
+
+  if len(sys.argv) > 2 and '--editor' in sys.argv:
     editor = True
     pygame.mouse.set_visible(False)
-    game = Editor()
-    game.filename = sys.argv[2]
-    game.tiles = load_level(sys.argv[2])
-   
+
+    i = sys.argv.index('--editor') 
+  if '--nosound' in sys.argv:
+    sound_on = False
+  
+  if editor:
+    game = Editor(sound=sound_on)
+    game.filename = sys.argv[i+1]
+    game.tiles = load_level(sys.argv[i+1])
+  else:
+    game = Game(sound=sound_on)
+  
   while 1:
     if game.state == 'next_level':
       game = Game()
