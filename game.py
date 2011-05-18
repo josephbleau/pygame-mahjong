@@ -60,6 +60,7 @@ class Game:
     self.time_started = localtime()
     self.m_selector = 0 # menu selector
     self.sound = sound
+    self.editor = editor
     
     # Background Music
     if self.sound:
@@ -205,10 +206,16 @@ class Game:
       pygame.draw.rect(screen,(0,0,0), (0,520,800,80))      
       
       # Draw Title & Score
-      render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
-      render_text(screen, self.font, "Pieces Removed: ", (20,540,200,100), color=(255,150,122))
-      render_text(screen, self.font, str(self.pieces_removed) + ' of ' + str(self.start_piece_count), (300,540,200,50), color=(255,255,255))
-      
+
+      if not self.editor:
+        render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
+        render_text(screen, self.font, "Pieces Removed: ", (20,540,200,100), color=(255,150,122))
+        render_text(screen, self.font, str(self.pieces_removed) + ' of ' + str(self.start_piece_count), (300,540,200,50), color=(255,255,255))
+      else:
+        render_text(screen, self.font, "Level Editor", (20,20,300,300), color=(255,150,122))
+        render_text(screen, self.font, "S = save, U = undo", (500,20,300,300), color=(255,150,122))
+        render_text(screen, self.font, "Editing: " + self.filename, (20,520,200,100), color=(255,150,122))
+        render_text(screen, self.font, "Pieces Placed: " + str(len(self.tiles)), (20,560,200,100), color=(255,255,255,))
       # Draw all of the tiles on the map.
       for tile in self.tiles:
         tile.draw(screen)

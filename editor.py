@@ -40,36 +40,64 @@ class Editor(Game):
       except IndexError, e:
         pass
     return
+  
+  def getNearestBelow(self, t):
+    "Determines whether or not our tile 't' has a tile below it, and if it does,  \
+     return the (nearest) tile below it. This is used in determining what z-level \
+     our tile should be at when editing levels."
+    x = t.x
+    y = t.y
+    z = t.z
+    for tile in sorted(self.tiles, key=byTopRight, reverse=True):
+      if (tile.x + 20 == x and tile.y - 30 == y) or \
+         (tile.x - 20 == x and tile.y - 30 == y) or \
+         (tile.x + 20 == x and tile.y + 30 == y) or \
+         (tile.x - 20 == x and tile.y + 30 == y):
+        return tile
+      if tile.x == x and tile.y == y:
+        return tile
+      if tile.y == y and tile.x + 20 == x:
+        return tile
+      if tile.x == x and tile.y + 30 == y:
+        return tile
+      if tile.x == x and tile.y - 30 == y:
+        return tile
+      if tile.y == y and tile.x - 20 == x:
+        return tile
+    return None
+    
+  def manual_move_tile_cursor(self, x, y):
+    "Take in mouse coordinates and move around our tile cursor."
+    x = int(x/20) * 20
+    y = int(y/30) * 30
+    self.cursor_tile.x = x
+    self.cursor_tile.y = y
+
+    nearest_below = self.getNearestBelow(self.cursor_tile) 
+    if nearest_below :
+      self.cursor_tile.z = nearest_below.z + 1
+    else:
+      self.cursor_tile.z = 1
+    
+    return
     
   def move_tile_cursor(self, event):
-    "Take in mouse coordinates and move around our tile cursor."
-    self.cursor_tile.x = int(event.pos[0] / 20) * 20
-    self.cursor_tile.y = int(event.pos[1] / 30) * 30
-    return
+    self.manual_move_tile_cursor( event.pos[0], event.pos[1] )
   
   
   def place_tile(self, event):
     if event.button == 1:
       no, x,y,z = self.cursor_tile.tileno, self.cursor_tile.x, self.cursor_tile.y, self.cursor_tile.z
-      for tile in self.tiles:
-        if (tile.x + 20 == x and tile.y - 30 == y) or \
-           (tile.x - 20 == x and tile.y - 30 == y) or \
-           (tile.x + 20 == x and tile.y + 30 == y) or \
-           (tile.x - 20 == x and tile.y + 30 == y):
-          z = tile.z + 1
-        if tile.x == x and tile.y == y:
-          z = tile.z + 1
-        if tile.y == y and tile.x + 20 == x:
-          z = tile.z + 1
-        if tile.x == x and tile.y + 30 == y:
-          z = tile.z + 1
-        if tile.x == x and tile.y - 30 == y:
-          z = tile.z + 1
-        if tile.y == y and tile.x - 20 == x:
-          z = tile.z + 1
-      self.tiles.append(Tile(no,x,y,z))
       
-    
+    nearest_below = self.getNearestBelow(self.cursor_tile) 
+    if nearest_below :
+      self.cursor_tile.z = nearest_below.z + 1
+    else:
+      self.cursor_tile.z = 1
+
+    self.tiles.append(Tile(no,x,y,z))
+    self.manual_move_tile_cursor(self.cursor_tile.x, self.cursor_tile.y)
+         
   def draw_tile_cursor(self, screen):
       self.cursor_tile.draw(screen)
     
