@@ -107,6 +107,8 @@ class Game:
                 
                 if len(self.tiles) == 0:
                   self.state = 'level_complete'
+                  pygame.event.clear()
+                  return
               self.selected = None
               return
             else:
@@ -144,30 +146,44 @@ class Game:
         if self.m_selector == 3:
           sys.exit()
           
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+        sys.exit()
+          
     if self.state == 'level_select':
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+        self.state = 'menu'
+        return
+        
       max = len(os.listdir(os.path.abspath('levels/')))-1
       if event.type == pygame.KEYDOWN and event.key == pygame.K_UP:
         if self.m_selector == 0:
-          self.m_selector = max
+          self.m_selector = max+1
         else:
           self.m_selector -= 1
       if event.type == pygame.KEYDOWN and event.key == pygame.K_DOWN:
-        if self.m_selector == max:
+        if self.m_selector == max+1:
           self.m_selector = 0
         else:
           self.m_selector += 1
           
       if event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+        if self.m_selector == max+1: #back button pressed
+          self.state = 'menu'
+          self.m_selector = 0
+          return
+          
         levels = os.listdir(os.path.abspath('levels/'))
         self.state = 'playing'      
         self.pieces_removed = 0
         self.tiles = load_level(filename=levels[self.m_selector], rnd=True)
         self.start_piece_count = len(self.tiles)             
       return
-    if self.state == 'playing':
-      self.handle_tile_click(event)
-    if self.state == 'level_complete':
-      self.state == 'next_level'
+    elif self.state == 'playing':
+      self.handle_tile_click(event) 
+    elif self.state == 'level_complete':
+      print '?'
+      if event.type == pygame.MOUSEBUTTONDOWN:
+        self.state = 'level_select'
       
   def render_menu(self, screen):
     "Draw the main menu"
@@ -198,6 +214,7 @@ class Game:
         level = level[:-4]
         render_text(screen, self.font, level, (410, 250 + i * 50, 300, 300))
         i += 1
+      render_text(screen, self.font, "BACK", (410, 250 + i * 50, 300, 300))
       render_text(screen, self.font, "->", (370, 250 + self.m_selector * 50, 300, 300 ))
       return
     elif self.state == 'playing':
