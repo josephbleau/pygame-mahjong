@@ -9,12 +9,16 @@ from random import shuffle
 
 # my imports
 from tile import *
-  
-def get_string_surf(font, text, color=(0,0,0)):
+
+# constants
+COLOR_WHITE = (255,255,255)
+COLOR_BLACK = (0,0,0)
+
+def get_string_surf(font, text, color=COLOR_BLACK):
   "Used in lazy-man text-writing :)"
   return font.render(text, True, color)
   
-def render_text(screen, font, text, (x,y,w,h), color=(0,0,0)):
+def render_text(screen, font, text, (x,y,w,h), color=COLOR_BLACK):
   "Lazy-man text-writing."
   screen.blit(get_string_surf(font, text, color=color), (x,y,w,h))
 
@@ -50,69 +54,56 @@ def load_level(filename, rnd=False, enforceTwo=False):
   return []
   
 class Game:    
-  def __init__(self, editor=False, sound=True):
-    if editor:
+  def __init__(self, editor=False, sound=True, filename=None):
+  
+    if editor: 
       self.state = 'playing'
+      self.filename = filename
+      self.tiles = load_level(filename, rnd=(not editor))
+      self.start_piece_count = len(self.tiles)
     else:
       self.state = 'menu'
     
     self.selected = None
     self.time_started = pygame.time.get_ticks()
     self.m_selector = 0 # menu selector
-    self.sound = sound
+    self.sound_on = sound
     self.editor = editor
     self.score = -1
     
-    # Background Music
-    if self.sound:
+    if self.sound_on:
       pygame.mixer.music.load('res/bg.mp3')
       pygame.mixer.music.play(loops=-1)
     
-    # Font
     self.fontpath = os.path.abspath('res/ChopinScript.otf')
     self.font = pygame.font.Font(self.fontpath, 42)
     
-    # Load tiles
     self.pieces_removed = 0
-    self.tiles = load_level('turtle.txt', rnd=(not editor))
-    self.start_piece_count = len(self.tiles)
-   #generate tiles, just for testing for now    
-   # offset_x = 200
-   # offset_y = 200
-   # pieces = [n%8+1 for n in range(64)] 
-   # for z in range(8):
-   #   for x in range(4-z/2):
-   #     for y in range(4-z/2):
-   #       choice = random.choice(pieces)
-   #       pieces.remove(choice)
-   #       self.tiles.append(Tile(choice,offset_x + x*40,offset_y +  y*60,z))  
-  
-  def write_score(self):
-    "Writes to file players high-score based on the time they took \
-     to complete the level. "
-    scorepath = os.path.abspath('levels/scores/')
-    try:
-      fh = open(scorepath +'/'+ self.filename, 'r')
-    except IOError:
-      fh = open(scorepath +'/'+ self.filename, 'a')
-      fh.close()
-      fh = open(scorepath +'/'+ self.filename, 'r')
       
-    scores = fh.read()
-    scores = re.findall('[(](\w*),(\w*)[)]', scores)
+  def write_score(self):
+    "Writes player score to file for the current level they just completed. "
+    scorepath = os.path.abspath('levels/scores/' + self.filename)
+    scores = []
     
+    try:
+      fh = open(scorepath, 'r')
+      scores = fh.read()
+      scores = re.findall('[(](\w*),(\w*)[)]', scores)
+      fh.close()
+    except IOError:
+      print "Score file doesn't yet exist, creating..."
+      
     scores.append(('player',(pygame.time.get_ticks() - self.time_started)/1000))
     if scores:
       scores = sorted(scores, key=lambda s: int(s[01]))
       
-    fh.close()
-    fh = open(scorepath +'/'+ self.filename, 'w')
+    fh = open(scorepath, 'w')
     for score in scores:
       fh.write('('+str(score[0])+','+str(score[1])+')')
 
     fh.close()
   
-    
+
   def handle_tile_click(self,event):
     "Send mouse click events to us. We handle selected / unselecting tiles, \
      match-pairing, and whether or not the matches were valid. This function also handles \
@@ -243,29 +234,33 @@ class Game:
       self.render_menu(screen)
       pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
       pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
-      render_text(screen, self.font, "Vanessa's Mahjong", (300, 120, 300, 300))
-      render_text(screen, self.font, "New Game", (380, 200, 300, 300))
-      render_text(screen, self.font, "High Scores", (380, 250, 300, 300))
-      render_text(screen, self.font, "Settings", (380, 300, 300, 300))
-      render_text(screen, self.font, "Exit Game", (380, 350, 300, 300))
+      render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
+      render_text(screen, self.font, "New Game", (310, 200, 300, 300))
+      render_text(screen, self.font, "High Scores", (310, 250, 300, 300))
+      render_text(screen, self.font, "Settings", (310, 300, 300, 300))
+      render_text(screen, self.font, "Exit Game", (310, 350, 300, 300))
       
-      render_text(screen, self.font, "->", (350, 200 + self.m_selector * 50, 300, 300))
+      render_text(screen, self.font, "->", (280, 200 + self.m_selector * 50, 300, 300))
       
       return
     elif self.state == 'level_select':
       pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
       pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
-      render_text(screen, self.font, "Vanessa's Mahjong", (300, 120, 300, 300))
-      render_text(screen, self.font, "Select a level:", (380, 200, 300, 300))
+      render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
+      render_text(screen, self.font, "Select a level...", (20,540,200,100), color=(255,150,122))
       i = 0
-      for level in os.listdir(os.path.abspath('levels/')):
+      levels = os.listdir(os.path.abspath('levels/'))
+      for level in levels:
         if level == 'scores':
           continue
         level = level[:-4]
-        render_text(screen, self.font, level, (410, 250 + i * 50, 300, 300))
+        render_text(screen, self.font, level, (310, 200 + i * 50, 300, 300))
         i += 1
-      render_text(screen, self.font, "BACK", (410, 250 + i * 50, 300, 300))
-      render_text(screen, self.font, "->", (370, 250 + self.m_selector * 50, 300, 300 ))
+      render_text(screen, self.font, "BACK", (310, 100, 300, 300))
+      if self.m_selector == len(levels)-1:
+        render_text(screen, self.font, "->", (280, 100, 300, 300 ))
+      else:
+        render_text(screen, self.font, "->", (280, 200 + self.m_selector * 50, 300, 300 ))
       return
     elif self.state == 'playing':
       #Bars
@@ -290,15 +285,15 @@ class Game:
           pygame.draw.rect(screen, (255,0,0), (self.selected.x - self.selected.z * 3, \
                                                self.selected.y - self.selected.z * 3, 40-2, 60-2),2)   
     elif self.state == 'level_complete':
+
       rose = pygame.image.load('res/rose.jpg')
-      roserect = [(0,200,318,350),(800-318,100,318,350)]
-      screen.blit(rose,roserect[0])
-      screen.blit(rose,roserect[1])
-      if self.score == -1:
-        self.score = str((pygame.time.get_ticks()-self.time_started)/1000)
-      render_text(screen, self.font, self.score + " seconds, sweet!", (450,450,200,100))
-      render_text(screen, self.font, "(Click for next level!)", (20,120,100,100))
+      roserect = (220,120,318,350)
+      screen.blit(rose,roserect)
       pygame.draw.rect(screen,(0,0,0), (0,0,800,100))
       pygame.draw.rect(screen,(0,0,0), (0,500,800,100))
+      if self.score == -1:
+        self.score = str((pygame.time.get_ticks()-self.time_started)/1000)
+      render_text(screen, self.font,"Click for next level...", (450,540,200,100), color=(255,150,122))
+      render_text(screen, self.font,  self.score + " seconds, sweet!", (20,40,200,200), color=(255,150,122))
       
     return

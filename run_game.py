@@ -1,3 +1,4 @@
+import argparse
 import sys
 import pygame
 import time
@@ -7,7 +8,6 @@ import os.path
 from tile import *
 from game import * 
 from editor import *
-
     
 def main():
   pygame.init()
@@ -16,7 +16,7 @@ def main():
   
   editor = False
   sound_on  = True
-
+  
   if len(sys.argv) > 2 and '--editor' in sys.argv:
     editor = True
     pygame.mouse.set_visible(False)
@@ -26,22 +26,13 @@ def main():
     sound_on = False
   
   if editor:
-    game = Editor(sound=sound_on)
-    game.filename = sys.argv[i+1]
-    game.tiles = load_level(sys.argv[i+1])
+    level_arg = sys.argv[i+1]
+    game = Editor(sound=sound_on, filename = level_arg)
   else:
     game = Game(sound=sound_on)
   
   while 1:
-    if game.state == 'next_level':
-      game = Game()
-      
-    if game.state == 'menu' or game.state == 'level_select':
-      screen.fill((255,255,255))
-    if game.state == 'playing':
-      screen.fill((255,255,255))
-    if game.state == 'level_complete':
-      screen.fill((255,255,255))
+    screen.fill((255,255,255))
       
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
