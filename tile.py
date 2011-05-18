@@ -47,7 +47,7 @@ class Tile:
           right = True
         if tile.x + 40 == self.x:
           left = True
-          
+           
       if tile.z == self.z:
         if (tile.y == self.y - 30 and tile.x == self.x + 40) or \
            (tile.y == self.y + 30 and tile.x == self.x + 40):
