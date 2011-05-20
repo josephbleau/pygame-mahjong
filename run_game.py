@@ -16,20 +16,27 @@ def main():
   
   editor = False
   sound_on  = True
+  player_name = 'Player'
   
   if len(sys.argv) > 2 and '--editor' in sys.argv:
     editor = True
     pygame.mouse.set_visible(False)
-
     i = sys.argv.index('--editor') 
+        
+    
+  if len(sys.argv) > 2 and '--player_name' in sys.argv:
+    pi = sys.argv.index('--player_name')+1
+    player_name = sys.argv[pi]
+    
   if '--nosound' in sys.argv:
     sound_on = False
+  
   
   if editor:
     level_arg = sys.argv[i+1]
     game = Editor(sound=sound_on, filename = level_arg)
   else:
-    game = Game(sound=sound_on)
+    game = Game(sound=sound_on, player_name=player_name)
   
   while True:
     for event in pygame.event.get():

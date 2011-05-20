@@ -58,7 +58,7 @@ def load_level(filename, rnd=False, enforceTwo=False):
   return []
   
 class Game:    
-  def __init__(self, editor=False, sound=True, filename=None):
+  def __init__(self, player_name='Player', editor=False, sound=True, filename=None):
   
     # If true, editor is running, if not then 
     # we begin in the menu like normal.
@@ -76,7 +76,8 @@ class Game:
     self.m_selector = 0                             # Menu Selector
     self.sound_on = sound                           # If sound is on
     self.editor = editor                            # If the editor is running
-    self.viewing_highscores_for = None
+    self.viewing_highscores_for = None              # Used in highscore view screen
+    self.player_name = player_name                  # Current player's name
     
     # State-based render handling
     self.render_func = { 'playing'        : self.render_playing,         \
@@ -114,7 +115,7 @@ class Game:
     except IOError:
       print "Score file doesn't yet exist, creating..."
       
-    scores.append(('player',(pygame.time.get_ticks() - self.time_started)/1000))
+    scores.append((self.player_name,(pygame.time.get_ticks() - self.time_started)/1000))
     if scores:
       scores = sorted(scores, key=lambda s: int(s[01]))
       
@@ -288,6 +289,27 @@ class Game:
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_ESCAPE:
         self.state = 'menu'
+        
+      if event.key == pygame.K_LEFT or \
+         event.key == pygame.K_RIGHT:
+      
+        levels = os.listdir(os.path.abspath('levels/scores'))
+        max = len(levels)
+        if self.viewing_highscores_for:
+          selected = levels.index(self.viewing_highscores_for)
+          if not selected == None:
+            if event.key == pygame.K_LEFT:
+              if selected == 0:
+                selected = max-1
+              else:
+                selected -= 1
+            elif event.key == pygame.K_RIGHT:
+              if selected == max-1:
+                selected = 0
+              else:
+                selected += 1
+
+            self.viewing_highscores_for = levels[selected]
   
   def render_highscores(self, screen):
     pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
