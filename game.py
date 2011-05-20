@@ -7,13 +7,15 @@ import os.path
 import random
 from random import shuffle
 
-# my imports
 from tile import *
 
-# constants
-COLOR_WHITE = (255,255,255)
 COLOR_BLACK = (0,0,0)
+COLOR_WHITE = (255,255,255)
 
+def render_black_bars(screen):
+  pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
+  pygame.draw.rect(screen,(0,0,0), (0,520,800,80)) 
+  
 def get_string_surf(font, text, color=COLOR_BLACK):
   "Used in lazy-man text-writing :)"
   return font.render(text, True, color)
@@ -24,7 +26,9 @@ def render_text(screen, font, text, (x,y,w,h), color=COLOR_BLACK):
 
 def load_level(filename, rnd=False, enforceTwo=False):
   "Loads a level from a text file. If the random flag is set to True \
-   then all tiles are simply random, otherwise use the files tileno's "
+   then all tiles are simply random, otherwise use the files data. "
+   
+  # If the file doesn't exist, create it for posterity.
   try:
     fh = open(os.path.abspath('levels/' + filename), 'r')
   except IOError, e:
@@ -56,30 +60,38 @@ def load_level(filename, rnd=False, enforceTwo=False):
 class Game:    
   def __init__(self, editor=False, sound=True, filename=None):
   
-    if editor: 
+    # If true, editor is running, if not then 
+    # we begin in the menu like normal.
+    if editor:  
       self.state = 'playing'
       self.filename = filename
       self.tiles = load_level(filename, rnd=(not editor))
       self.start_piece_count = len(self.tiles)
     else:
-      self.state = 'menu'
+      self.state = 'menu' 
+      
+    self.pieces_removed = 0                         # Pieces removed in current level.
+    self.selected = None                            # The tile currently selected 
+    self.time_started = pygame.time.get_ticks()     # When our level started
+    self.m_selector = 0                             # Menu Selector
+    self.sound_on = sound                           # If sound is on
+    self.editor = editor                            # If the editor is running
     
-    self.selected = None
-    self.time_started = pygame.time.get_ticks()
-    self.m_selector = 0 # menu selector
-    self.sound_on = sound
-    self.editor = editor
-    self.score = -1
+    self.render_func = { 'playing' : self.render_playing,               \
+                         'menu' : self.render_menu,                     \
+                         'level_select' : self.render_level_select,     \
+                         'paused': self.render_paused,                  \
+                         'level_complete' : self.render_level_complete, \
+                         'highscores': self.render_highscores }
     
+    # If true then play sound
     if self.sound_on:
       pygame.mixer.music.load('res/bg.mp3')
       pygame.mixer.music.play(loops=-1)
     
-    self.fontpath = os.path.abspath('res/ChopinScript.otf')
-    self.font = pygame.font.Font(self.fontpath, 42)
-    
-    self.pieces_removed = 0
-      
+    self.fontpath = os.path.abspath('res/ChopinScript.otf')   # Standard font resource location
+    self.font = pygame.font.Font(self.fontpath, 42)           # Loaded standard font
+     
   def write_score(self):
     "Writes player score to file for the current level they just completed. "
     scorepath = os.path.abspath('levels/scores/' + self.filename)
@@ -128,6 +140,7 @@ class Game:
                 # If we won!
                 if len(self.tiles) == 0:
                   self.state = 'level_complete'
+                  self.score = str((pygame.time.get_ticks()-self.time_started)/1000)
                   pygame.event.clear()
                   
                   self.write_score()
@@ -208,93 +221,91 @@ class Game:
     elif self.state == 'playing':
       if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
         if not self.editor:
-          self.state = 'level_select'
+          self.state = 'paused'
         else:
           sys.exit()
         return
         
       self.handle_tile_click(event) 
+    elif self.state == 'paused':
+      if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+        self.state == 'playing'
     elif self.state == 'level_complete':
       if event.type == pygame.MOUSEBUTTONDOWN:
-        self.score = -1
         self.state = 'level_select'
         self.selected = None
-      
-  def render_menu(self, screen):
-    "Draw the main menu"
-    pass
-    
+          
   def render(self, screen):
     "Based on the games state, call the appropriate drawing methods"
-    if self.state == 'show_highscores':
-      pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
-      pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
-      render_text(screen, self.font, "Vanessa's Mahjong", (300, 120, 300, 300))
-      
-    if self.state == 'menu':
-      self.render_menu(screen)
-      pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
-      pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
-      render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
-      render_text(screen, self.font, "New Game", (310, 200, 300, 300))
-      render_text(screen, self.font, "High Scores", (310, 250, 300, 300))
-      render_text(screen, self.font, "Settings", (310, 300, 300, 300))
-      render_text(screen, self.font, "Exit Game", (310, 350, 300, 300))
-      
-      render_text(screen, self.font, "->", (280, 200 + self.m_selector * 50, 300, 300))
-      
-      return
-    elif self.state == 'level_select':
-      pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
-      pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
-      render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
-      render_text(screen, self.font, "Select a level...", (20,540,200,100), color=(255,150,122))
-      i = 0
-      levels = os.listdir(os.path.abspath('levels/'))
-      for level in levels:
-        if level == 'scores':
-          continue
-        level = level[:-4]
-        render_text(screen, self.font, level, (310, 200 + i * 50, 300, 300))
-        i += 1
-      render_text(screen, self.font, "BACK", (310, 100, 300, 300))
-      if self.m_selector == len(levels)-1:
-        render_text(screen, self.font, "->", (280, 100, 300, 300 ))
-      else:
-        render_text(screen, self.font, "->", (280, 200 + self.m_selector * 50, 300, 300 ))
-      return
-    elif self.state == 'playing':
-      #Bars
-      pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
-      pygame.draw.rect(screen,(0,0,0), (0,520,800,80))      
-      
-      # Draw Title & Score
+    # If our state is valid, it should have an associated rendering function
+    # specified, but check here just to be sure.
+    if self.state in self.render_func: 
+      self.render_func[self.state](screen)
+  
+  def render_highscores(self, screen):
+    pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
+    pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
+    render_text(screen, self.font, "Vanessa's Mahjong", (300, 120, 300, 300))
+    
+  def render_level_complete(self, screen):
+    rose = pygame.image.load('res/rose.jpg')
+    roserect = (220,120,318,350)
+    screen.blit(rose,roserect)
+    render_black_bars(screen)
 
-      if not self.editor:
-        render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
-        render_text(screen, self.font, "Pieces Removed: ", (20,540,200,100), color=(255,150,122))
-        render_text(screen, self.font, str(self.pieces_removed) + ' of ' + str(self.start_piece_count), (300,540,200,50), color=(255,255,255))
-      else:
-        render_text(screen, self.font, "Level Editor", (20,20,300,300), color=(255,150,122))
-        render_text(screen, self.font, "S = save, U = undo", (500,20,300,300), color=(255,150,122))
-        render_text(screen, self.font, "Editing: " + self.filename, (20,520,200,100), color=(255,150,122))
-        render_text(screen, self.font, "Pieces Placed: " + str(len(self.tiles)), (20,560,200,100), color=(255,255,255,))
-      # Draw all of the tiles on the map.
-      for tile in self.tiles:
-        tile.draw(screen)
-        if self.selected: 
-          pygame.draw.rect(screen, (255,0,0), (self.selected.x - self.selected.z * 3, \
-                                               self.selected.y - self.selected.z * 3, 40-2, 60-2),2)   
-    elif self.state == 'level_complete':
-
-      rose = pygame.image.load('res/rose.jpg')
-      roserect = (220,120,318,350)
-      screen.blit(rose,roserect)
-      pygame.draw.rect(screen,(0,0,0), (0,0,800,100))
-      pygame.draw.rect(screen,(0,0,0), (0,500,800,100))
-      if self.score == -1:
-        self.score = str((pygame.time.get_ticks()-self.time_started)/1000)
-      render_text(screen, self.font,"Click for next level...", (450,540,200,100), color=(255,150,122))
-      render_text(screen, self.font,  self.score + " seconds, sweet!", (20,40,200,200), color=(255,150,122))
+    render_text(screen, self.font,"Click for next level...", (450,540,200,100), color=(255,150,122))
+    render_text(screen, self.font,  str(self.score) + " seconds, sweet!", (20,40,200,200), color=(255,150,122))
       
-    return
+  def render_playing(self,screen):
+    render_black_bars(screen)
+    
+    # True if we're currently in the editor. Just changes the labels
+    # drawn to the screen.
+    if self.editor:
+      render_text(screen, self.font, "Level Editor", (20,20,300,300), color=(255,150,122))
+      render_text(screen, self.font, "S = save, U = undo", (500,20,300,300), color=(255,150,122))
+      render_text(screen, self.font, "Editing: " + self.filename, (20,520,200,100), color=(255,150,122))
+      render_text(screen, self.font, "Pieces Placed: " + str(len(self.tiles)), (20,560,200,100), color=(255,255,255,))
+    else:
+      render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
+      render_text(screen, self.font, "Pieces Removed: ", (20,540,200,100), color=(255,150,122))
+      render_text(screen, self.font, str(self.pieces_removed) + ' of ' + str(self.start_piece_count), (300,540,200,50), color=(255,255,255))
+      
+    # Draw all of the tiles on the map.
+    for tile in self.tiles:
+      tile.draw(screen)
+      if self.selected: 
+        pygame.draw.rect(screen, (255,0,0), (self.selected.x - self.selected.z * 3, \
+                                             self.selected.y - self.selected.z * 3, 40-2, 60-2),2)
+
+  def render_menu(self, screen):
+    pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
+    pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
+    render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
+    render_text(screen, self.font, "New Game", (310, 200, 300, 300))
+    render_text(screen, self.font, "High Scores", (310, 250, 300, 300))
+    render_text(screen, self.font, "Settings", (310, 300, 300, 300))
+    render_text(screen, self.font, "Exit Game", (310, 350, 300, 300))
+    render_text(screen, self.font, "->", (280, 200 + self.m_selector * 50, 300, 300))
+    
+  def render_level_select(self, screen):
+    render_black_bars(screen)  
+    render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
+    render_text(screen, self.font, "Select a level...", (20,540,200,100), color=(255,150,122))
+    i = 0
+    levels = os.listdir(os.path.abspath('levels/'))
+    for level in levels:
+      if level == 'scores':
+        continue
+      level = level[:-4]
+      render_text(screen, self.font, level, (310, 200 + i * 50, 300, 300))
+      i += 1
+    render_text(screen, self.font, "BACK", (310, 100, 300, 300))
+    if self.m_selector == len(levels)-1:
+      render_text(screen, self.font, "->", (280, 100, 300, 300 ))
+    else:
+      render_text(screen, self.font, "->", (280, 200 + self.m_selector * 50, 300, 300 ))
+      
+  def render_paused(screen):
+    pass
+    
