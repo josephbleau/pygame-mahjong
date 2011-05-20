@@ -121,10 +121,22 @@ class Game:
     for score in scores:
       fh.write('('+str(score[0])+','+str(score[1])+')')
 
-    fh.close()
-  
+    fh.close()      
+          
   def handle_input(self, event):
     "Based on the games current state, manage our mouse input."
+    # The editor is a special case. It's not handled by a 
+    # single function, as it's slightly more complex.
+    if self.editor:
+      if  event.type == pygame.MOUSEBUTTONDOWN:
+        self.place_tile(event)
+      elif event.type == pygame.MOUSEMOTION:
+        self.move_tile_cursor(event)
+      elif event.type == pygame.KEYDOWN:
+        self.select_cursor_tile(event)
+        
+      return
+    
     # If our state is valid, it should have an associated input handler,
     # but as with rendering, check to be sure. :)
     if self.state in self.input_handlers:
@@ -134,8 +146,12 @@ class Game:
     "Based on the games state, call the appropriate drawing methods"
     # If our state is valid, it should have an associated rendering function
     # specified, but check here just to be sure.
-    if self.state in self.render_func: 
+    if self.state in self.render_func:     
+      screen.fill((255,255,255))
       self.render_func[self.state](screen)
+      
+    if self.editor:
+      self.draw_tile_cursor(screen)  
       
   def handle_menu_input(self, event):
     if event.type == pygame.KEYDOWN:

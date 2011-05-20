@@ -31,30 +31,14 @@ def main():
   else:
     game = Game(sound=sound_on)
   
-  while 1:
-    screen.fill((255,255,255))
-      
+  while True:
     for event in pygame.event.get():
       if event.type == pygame.QUIT:
         return
-      if event.type == pygame.MOUSEBUTTONDOWN:
-        if editor:
-          game.place_tile(event)
-        else:
-          game.handle_input(event)
-      if event.type == pygame.MOUSEMOTION:
-        if editor:
-          game.move_tile_cursor(event)
-      if event.type == pygame.KEYDOWN:
-        game.handle_input(event)
-        if editor:
-          game.select_cursor_tile(event)
+
+      game.handle_input(event)
      
     game.render(screen)
-  
-    if editor:
-      game.draw_tile_cursor(screen)  
-      
     pygame.display.flip()
         
     time.sleep(.001)  
