@@ -76,6 +76,7 @@ class Game:
     self.m_selector = 0                             # Menu Selector
     self.sound_on = sound                           # If sound is on
     self.editor = editor                            # If the editor is running
+    self.viewing_highscores_for = None
     
     # State-based render handling
     self.render_func = { 'playing'        : self.render_playing,         \
@@ -118,9 +119,15 @@ class Game:
       scores = sorted(scores, key=lambda s: int(s[01]))
       
     fh = open(scorepath, 'w')
+    i = 0
     for score in scores:
       fh.write('('+str(score[0])+','+str(score[1])+')')
-
+      if i < 4:
+        i += 1
+      else:
+        fh.close()
+        return
+        
     fh.close()      
           
   def handle_input(self, event):
@@ -170,6 +177,9 @@ class Game:
       if event.key == pygame.K_RETURN:
         if self.m_selector == 0:
           self.state = 'level_select'
+          self.m_selector = 0
+        if self.m_selector == 1:
+          self.state = 'highscores'
           self.m_selector = 0
           
         if self.m_selector == 3:
@@ -239,6 +249,7 @@ class Game:
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_ESCAPE:
         self.state = 'menu'
+        self.m_selector = 0
         return
       elif event.key == pygame.K_UP:
         if self.m_selector == 0:
@@ -274,13 +285,40 @@ class Game:
     pass
     
   def handle_highscores_input(self, event):
-    pass
+    if event.type == pygame.KEYDOWN:
+      if event.key == pygame.K_ESCAPE:
+        self.state = 'menu'
   
   def render_highscores(self, screen):
     pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
     pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
-    render_text(screen, self.font, "Vanessa's Mahjong", (300, 120, 300, 300))
+    render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
+    render_text(screen, self.font, "Highscores...", (20,540,200,100), color=(255,150,122))
+    render_text(screen, self.font, "Arrow keys to cycle", (500,20,300,300), color=(255,150,122))
     
+    if self.viewing_highscores_for:
+      scorepath = os.path.abspath('levels/scores/' + self.viewing_highscores_for)
+      fh = open(scorepath, 'r')
+      if fh:
+        text = fh.read()
+        scores = re.findall('[(](\w+),(\d+)[)]', text)
+        
+        render_text(screen, self.font, self.viewing_highscores_for,( 300,125,300,300))
+        i = 1
+        for score in scores:
+          render_text(screen, self.font, score[0]+' - '+score[1] + ' seconds...',( 325,125+i*50,350,300))
+          i += 1
+    else:
+      levels = os.listdir(os.path.abspath('levels/scores/'))
+      
+      if 'scores' in levels:
+        levels.remove('scores')
+      
+      if len(levels) > 0:
+        self.viewing_highscores_for = levels[0]
+      else:
+        render_text(screen, self.font, "You have no high scores yet.", (200,255,30,300))
+      
   def render_level_complete(self, screen):
     rose = pygame.image.load('res/rose.jpg')
     roserect = (220,120,318,350)
@@ -288,10 +326,9 @@ class Game:
     render_black_bars(screen)
 
     render_text(screen, self.font,"Click for next level...", (450,540,200,100), color=(255,150,122))
-    render_text(screen, self.font,  str(self.score) + " seconds, sweet!", (20,40,200,200), color=(255,150,122))
+    render_text(screen, self.font,  str(self.score) + " seconds, sweet!", (20,20,300,300), color=(255,150,122))
       
   def render_playing(self,screen):
-
     render_black_bars(screen)
     
     # True if we're currently in the editor. Just changes the labels
