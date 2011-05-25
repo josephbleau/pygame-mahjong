@@ -11,12 +11,6 @@ from tile import *
 
 COLOR_BLACK = (0,0,0)
 COLOR_WHITE = (255,255,255)
-def is_in(x,y, rect):
-  if x >= rect[0] and x <= rect[0]+rect[2] and \
-     y >= rect[1] and y <= rect[1]+rect[3]:
-    return True
-
-  return False
 
 def render_black_bars(screen):
   pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
@@ -101,9 +95,9 @@ class Game:
                             'level_complete' : self.handle_level_complete_input, \
                             'highscores'     : self.handle_highscores_input }
     # If true then play sound
-    #if self.sound_on:
-      #pygame.mixer.music.load('res/bg.mp3')
-      #pygame.mixer.music.play(loops=-1)
+    if self.sound_on:
+      pygame.mixer.music.load('res/bg.mp3')
+      pygame.mixer.music.play(loops=-1)
     
     self.fontpath = os.path.abspath('res/ChopinScript.otf')   # Standard font resource location
     self.font = pygame.font.Font(self.fontpath, 42)           # Loaded standard font
@@ -166,30 +160,8 @@ class Game:
       
     if self.editor:
       self.draw_tile_cursor(screen)  
-
-
-  def handle_menu_input(self, event):
-    if event.type == pygame.MOUSEMOTION:
-      x,y = pygame.mouse.get_pos()
-      for i in range(4):
-        if is_in(x,y,(310, 200+42*i, 250, 42)):
-          self.m_selector = i
-
-    if event.type == pygame.MOUSEBUTTONDOWN:
-      x,y = pygame.mouse.get_pos()
-      for i in range(5):
-        if is_in(x,y,(310, 200+42*i, 250, 42)):
-          self.m_selector = i
-          if i == 0:
-            self.state = 'level_select'
-            return
-          elif i == 1:
-            self.state = 'highscores'
-            return
-          elif i == 4:
-            sys.exit()
-            return
       
+  def handle_menu_input(self, event):
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_DOWN:
         if self.m_selector == 3:
@@ -275,32 +247,6 @@ class Game:
     
     if 'scores' in levels:
       levels.remove('scores')
-
-    if event.type == pygame.MOUSEMOTION:
-      for i in range(len(levels)):
-        x,y = pygame.mouse.get_pos()        
-        if is_in(x,y,(310, 200 + i * 50, 300, 84)):
-          self.m_selector = i
-      if is_in(x,y,(310, 100, 300, 84)):
-        self.m_selector = len(levels)
-
-    if event.type == pygame.MOUSEBUTTONDOWN:
-      for i in range(len(levels)):
-        x,y = pygame.mouse.get_pos()        
-        if is_in(x,y,(310, 200 + i * 50, 300, 84)):
-          # True if they selected enter while BACK was highlighted.
-          self.state = 'playing'     
-          self.time_started = pygame.time.get_ticks()
-          self.pieces_removed = 0
-          self.tiles = load_level(filename=levels[self.m_selector], rnd=True)
-          self.filename = levels[self.m_selector]
-          self.start_piece_count = len(self.tiles)
-
-      if is_in(x,y,(310, 100, 300, 84)):
-        self.state = 'menu'
-        self.m_selector = 0
-        return
-
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_ESCAPE:
         self.state = 'menu'
