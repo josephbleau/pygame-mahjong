@@ -2,6 +2,14 @@ import sys
 import pygame
 import time
 import os.path
+import random
+
+def shuffle_tiles(tiles):
+  # Shuffle Tiles
+  for tile in tiles:
+    r = random.choice(range(len(tiles)))     
+    tile, tiles[r] = Tile( tiles[r].tileno, tile.x, tile.y, tile.z ), \
+                     Tile( tile.tileno, tiles[r].x, tiles[r].y, tiles[r].z )
 
 class Tile:
   def __init__(self, tileno, x, y, z):

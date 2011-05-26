@@ -54,11 +54,13 @@ def load_level(filename, rnd=False, enforceTwo=False):
     if rnd:
       random.seed()
       for tile in range(0,len(tiles)-1,2):
-        no = random.choice(range(1,9,1))
+        no = random.choice(range(1,15,1))
         tiles[tile] = Tile(no, tiles[tile].x, tiles[tile].y, tiles[tile].z)
         tiles[tile+1] = Tile(no, tiles[tile+1].x, tiles[tile+1].y, tiles[tile+1].z)
-        
-        
+      
+      
+      shuffle_tiles(tiles)
+    
     return tiles
       
   return []
