@@ -84,6 +84,9 @@ class Game:
     self.editor = editor                            # If the editor is running
     self.viewing_highscores_for = None              # Used in highscore view screen
     self.player_name = player_name                  # Current player's name
+    self.resources = { 'pause' : pygame.image.load(os.path.abspath('res/icons/pause.png')), \
+                       'back'  : pygame.image.load(os.path.abspath('res/icons/back.png')),  \
+                       'play'  : pygame.image.load(os.path.abspath('res/icons/play.png'))  }
     
     # State-based render handling
     self.render_func = { 'playing'        : self.render_playing,         \
@@ -227,6 +230,19 @@ class Game:
         return
       
     if event.type == pygame.MOUSEBUTTONDOWN:
+      #First see if we're not clicking a button before we get all
+      #shnazzy and complicated-like
+      backrect  = (720, 16, 32, 32)
+      pauserect = (760, 16, 32, 32)
+      x,y = event.pos
+      if is_in(x,y,backrect):
+        self.state = 'level_select'
+        return
+      if is_in(x,y,pauserect):
+        self.state = 'paused'
+        self.paused_at = pygame.time.get_ticks()
+        return
+
       # Iterate through tiles seing if we've clicked above any of them.
       # If we have, and it's deemed selectable, then select it. If we have and
       # A tile is already selected elsewhere, compare the two to see if they're a match.
@@ -337,7 +353,18 @@ class Game:
       self.selected = None
   
   def handle_paused_input(self, event):
-    pass
+    if event.type == pygame.MOUSEBUTTONDOWN:
+      backrect  = (720, 16, 32, 32)
+      pauserect = (760, 16, 32, 32)
+      x,y = event.pos
+      if is_in(x,y,backrect):
+        self.state = 'level_select'
+        
+      if is_in(x,y,pauserect):
+        self.state = 'playing'
+        self.time_started += (pygame.time.get_ticks() - self.paused_at)
+      
+    
     
   def handle_highscores_input(self, event):
     if event.type == pygame.KEYDOWN:
@@ -418,10 +445,19 @@ class Game:
       render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
       render_text(screen, self.font, "Pieces Removed: ", (20,540,200,100), color=(255,150,122))
       render_text(screen, self.font, str(self.pieces_removed) + ' of ' + str(self.start_piece_count), (300,540,200,50), color=(255,255,255))
-      
+      screen.blit(self.resources['back'], (720, 16, 32, 32))
+      if self.state == 'playing':
+        screen.blit(self.resources['pause'], (760, 16, 32, 32))
+        render_text(screen, self.font, "Time Elapsed: ", (470, 540, 100,100), color=(255,150,122))
+        render_text(screen, self.font, str(int((pygame.time.get_ticks()  - self.time_started) / 1000)), \
+                    (705, 540, 100,100), color=(255,255,255))
+      elif self.state == 'paused':
+        screen.blit(self.resources['play'], (760, 16, 32, 32))
+        render_text(screen, self.font, "Paused", (470, 540, 100,100), color=(255,255,255))
+
     # Draw all of the tiles on the map.
     for tile in self.tiles:
-      tile.draw(screen)
+      tile.draw(screen) 
       if self.selected: 
         pygame.draw.rect(screen, (255,0,0), (self.selected.x - self.selected.z * 3, \
                                              self.selected.y - self.selected.z * 3, 40-2, 60-2),2)
@@ -454,6 +490,8 @@ class Game:
     else:
       render_text(screen, self.font, "->", (280, 200 + self.m_selector * 50, 300, 300 ))
       
-  def render_paused(screen):
+  def render_paused(self,screen):
+    self.render_playing(screen)
+    
     pass
     
