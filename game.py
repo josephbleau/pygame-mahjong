@@ -88,8 +88,10 @@ class Game:
     self.player_name = player_name                  # Current player's name
     self.resources = { 'pause' : pygame.image.load(os.path.abspath('res/icons/pause.png')), \
                        'back'  : pygame.image.load(os.path.abspath('res/icons/back.png')),  \
-                       'play'  : pygame.image.load(os.path.abspath('res/icons/play.png')),
-                       'sfx_select' : pygame.mixer.Sound( os.path.abspath('res/sfx/select.wave'))  }
+                       'play'  : pygame.image.load(os.path.abspath('res/icons/play.png')),  \
+                       'sfx_select' : pygame.mixer.Sound( os.path.abspath('res/sfx/select.wav')), \
+                       'sfx_back'   : pygame.mixer.Sound( os.path.abspath('res/sfx/back.wav')),   \
+                       'sfx_switch' : pygame.mixer.Sound( os.path.abspath('res/sfx/switch.wav'))  }
     
     # State-based render handling
     self.render_func = { 'playing'        : self.render_playing,         \
@@ -108,8 +110,8 @@ class Game:
                             'highscores'     : self.handle_highscores_input }
     # If true then play sound
     #if self.sound_on:
-      #pygame.mixer.music.load('res/bg.mp3')
-      #pygame.mixer.music.play(loops=-1)
+     # pygame.mixer.music.load('res/sfx/Wish4U.mp3')
+     # pygame.mixer.music.play(loops=-1)
     
     self.fontpath = os.path.abspath('res/C_BOX.TTF')   # Standard font resource location
     self.font = pygame.font.Font(self.fontpath, 30, bold=True)           # Loaded standard font
@@ -178,13 +180,15 @@ class Game:
     if event.type == pygame.MOUSEMOTION:
       x,y = pygame.mouse.get_pos()
       for i in range(4):
-        if is_in(x,y,(310, 200+42*i, 250, 42)):
-          self.m_selector = i
+        if is_in(x,y,(310, 200+42*i, 250, 30)):
+          if not i == self.m_selector:
+            self.resources['sfx_switch'].play()
+            self.m_selector = i
 
     if event.type == pygame.MOUSEBUTTONDOWN:
       x,y = pygame.mouse.get_pos()
       for i in range(5):
-        if is_in(x,y,(310, 200+42*i, 250, 42)):
+        if is_in(x,y,(310, 200+42*i, 250, 30)):
           self.resources['sfx_select'].play()
           self.m_selector = i
           if i == 0:
@@ -199,18 +203,21 @@ class Game:
       
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_DOWN:
+        self.resources['sfx_switch'].play()
         if self.m_selector == 3:
           self.m_selector = 0
         else:
           self.m_selector += 1
           
       if event.key == pygame.K_UP:
+        self.resources['sfx_switch'].play()
         if self.m_selector == 0:
           self.m_selector = 3
         else:
           self.m_selector -= 1
         
       if event.key == pygame.K_RETURN:
+        self.resources['sfx_select'].play()
         if self.m_selector == 0:
           self.state = 'level_select'
           self.m_selector = 0
@@ -222,11 +229,13 @@ class Game:
           sys.exit()
         
       if event.key == pygame.K_ESCAPE:
+        self.resources['sfx_back'].play()
         sys.exit()
           
   def handle_playing_input(self, event):
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_ESCAPE:
+        self.resources['sfx_back'].play()
         if not self.editor:
           self.state = 'level_select'
         else:
@@ -240,6 +249,7 @@ class Game:
       pauserect = (760, 16, 32, 32)
       x,y = event.pos
       if is_in(x,y,backrect):
+        self.resources['sfx_back'].play()
         self.state = 'level_select'
         return
       if is_in(x,y,pauserect):
@@ -299,16 +309,22 @@ class Game:
     if event.type == pygame.MOUSEMOTION:
       for i in range(len(levels)):
         x,y = pygame.mouse.get_pos()        
-        if is_in(x,y,(310, 200 + i * 50, 300, 84)):
-          self.m_selector = i
-      if is_in(x,y,(310, 100, 300, 84)):
-        self.m_selector = len(levels)
+        if is_in(x,y,(310, 200 + i * 50, 300, 30)):
+          if not i == self.m_selector:
+            self.resources['sfx_switch'].play()
+            self.m_selector = i
+            return
+      if is_in(x,y,(310, 100, 300, 30)):
+        if not self.m_selector == len(levels):
+          self.resources['sfx_switch'].play()
+          self.m_selector = len(levels)
 
     if event.type == pygame.MOUSEBUTTONDOWN:
       for i in range(len(levels)):
         x,y = pygame.mouse.get_pos()        
-        if is_in(x,y,(310, 200 + i * 50, 300, 84)):
+        if is_in(x,y,(310, 200 + i * 50, 300, 42)):
           # True if they selected enter while BACK was highlighted.
+          self.resources['sfx_select'].play()
           self.state = 'playing'     
           self.time_started = pygame.time.get_ticks()
           self.pieces_removed = 0
@@ -317,6 +333,7 @@ class Game:
           self.start_piece_count = len(self.tiles)
 
       if is_in(x,y,(310, 100, 300, 84)):
+        self.resources['sfx_back'].play()
         self.state = 'menu'
         self.m_selector = 0
         return
@@ -327,23 +344,26 @@ class Game:
         self.m_selector = 0
         return
       elif event.key == pygame.K_UP:
+        self.resources['sfx_switch'].play()
         if self.m_selector == 0:
           self.m_selector = max
         else:
           self.m_selector -= 1
       elif event.key == pygame.K_DOWN:
+        self.resources['sfx_switch'].play()
         if self.m_selector == max:
           self.m_selector = 0
         else:
           self.m_selector += 1  
       elif event.key == pygame.K_RETURN:
-      
         # True if they selected enter while BACK was highlighted.
         if self.m_selector == max:
+          self.resources['sfx_back'].play()
           self.state = 'menu'
           self.m_selector = 0
           return
-          
+        
+        self.resources['sfx_select'].play()
         self.state = 'playing'     
         self.time_started = pygame.time.get_ticks()
         self.pieces_removed = 0
