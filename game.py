@@ -401,7 +401,7 @@ class Game:
     pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
     render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,74,203))
     render_text(screen, self.font, "Highscores...", (20,540,200,100), color=(255,74,203))
-    render_text(screen, self.font, "Arrow keys to cycle", (500,20,300,300), color=(255,74,203))
+    render_text(screen, self.font, "Left/Right to Cycle", (450,20,300,300), color=(255,74,203))
     
     if self.viewing_highscores_for:
       scorepath = os.path.abspath('levels/scores/' + self.viewing_highscores_for)
@@ -485,7 +485,6 @@ class Game:
     for level in levels:
       if level == 'scores':
         continue
-      level = level[:-4]
       render_text(screen, self.font, level, (310, 200 + i * 50, 300, 300))
       i += 1
     render_text(screen, self.font, "BACK", (310, 100, 300, 300))
