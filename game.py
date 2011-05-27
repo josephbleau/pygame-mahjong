@@ -88,7 +88,8 @@ class Game:
     self.player_name = player_name                  # Current player's name
     self.resources = { 'pause' : pygame.image.load(os.path.abspath('res/icons/pause.png')), \
                        'back'  : pygame.image.load(os.path.abspath('res/icons/back.png')),  \
-                       'play'  : pygame.image.load(os.path.abspath('res/icons/play.png'))  }
+                       'play'  : pygame.image.load(os.path.abspath('res/icons/play.png')),
+                       'sfx_select' : pygame.mixer.Sound( os.path.abspath('res/sfx/select.wave'))  }
     
     # State-based render handling
     self.render_func = { 'playing'        : self.render_playing,         \
@@ -110,8 +111,8 @@ class Game:
       #pygame.mixer.music.load('res/bg.mp3')
       #pygame.mixer.music.play(loops=-1)
     
-    self.fontpath = os.path.abspath('res/ChopinScript.otf')   # Standard font resource location
-    self.font = pygame.font.Font(self.fontpath, 42)           # Loaded standard font
+    self.fontpath = os.path.abspath('res/C_BOX.TTF')   # Standard font resource location
+    self.font = pygame.font.Font(self.fontpath, 30, bold=True)           # Loaded standard font
      
   def write_score(self):
     "Writes player score to file for the current level they just completed. "
@@ -184,6 +185,7 @@ class Game:
       x,y = pygame.mouse.get_pos()
       for i in range(5):
         if is_in(x,y,(310, 200+42*i, 250, 42)):
+          self.resources['sfx_select'].play()
           self.m_selector = i
           if i == 0:
             self.state = 'level_select'
@@ -397,9 +399,9 @@ class Game:
   def render_highscores(self, screen):
     pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
     pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
-    render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
-    render_text(screen, self.font, "Highscores...", (20,540,200,100), color=(255,150,122))
-    render_text(screen, self.font, "Arrow keys to cycle", (500,20,300,300), color=(255,150,122))
+    render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,74,203))
+    render_text(screen, self.font, "Highscores...", (20,540,200,100), color=(255,74,203))
+    render_text(screen, self.font, "Arrow keys to cycle", (500,20,300,300), color=(255,74,203))
     
     if self.viewing_highscores_for:
       scorepath = os.path.abspath('levels/scores/' + self.viewing_highscores_for)
@@ -430,8 +432,8 @@ class Game:
     screen.blit(rose,roserect)
     render_black_bars(screen)
 
-    render_text(screen, self.font,"Click for next level...", (450,540,200,100), color=(255,150,122))
-    render_text(screen, self.font,  str(self.score) + " seconds, sweet!", (20,20,300,300), color=(255,150,122))
+    render_text(screen, self.font,"Click for next level...", (450,540,200,100), color=(255,74,203))
+    render_text(screen, self.font,  str(self.score) + " seconds, sweet!", (20,20,300,300), color=(255,74,203))
       
   def render_playing(self,screen):
     render_black_bars(screen)
@@ -439,18 +441,18 @@ class Game:
     # True if we're currently in the editor. Just changes the labels
     # drawn to the screen.
     if self.editor:
-      render_text(screen, self.font, "Level Editor", (20,20,300,300), color=(255,150,122))
-      render_text(screen, self.font, "S = save, U = undo", (500,20,300,300), color=(255,150,122))
-      render_text(screen, self.font, "Editing: " + self.filename, (20,520,200,100), color=(255,150,122))
+      render_text(screen, self.font, "Level Editor", (20,20,300,300), color=(255,74,203))
+      render_text(screen, self.font, "S = save, U = undo", (500,20,300,300), color=(255,74,203))
+      render_text(screen, self.font, "Editing: " + self.filename, (20,520,200,100), color=(255,74,203))
       render_text(screen, self.font, "Pieces Placed: " + str(len(self.tiles)), (20,560,200,100), color=(255,255,255,))
     else:
-      render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
-      render_text(screen, self.font, "Pieces Removed: ", (20,540,200,100), color=(255,150,122))
+      render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,74,203))
+      render_text(screen, self.font, "Pieces Removed: ", (20,540,200,100), color=(255,74,203))
       render_text(screen, self.font, str(self.pieces_removed) + ' of ' + str(self.start_piece_count), (300,540,200,50), color=(255,255,255))
       screen.blit(self.resources['back'], (720, 16, 32, 32))
       if self.state == 'playing':
         screen.blit(self.resources['pause'], (760, 16, 32, 32))
-        render_text(screen, self.font, "Time Elapsed: ", (470, 540, 100,100), color=(255,150,122))
+        render_text(screen, self.font, "Time Elapsed: ", (470, 540, 100,100), color=(255,74,203))
         render_text(screen, self.font, str(int((pygame.time.get_ticks()  - self.time_started) / 1000)), \
                     (705, 540, 100,100), color=(255,255,255))
       elif self.state == 'paused':
@@ -467,17 +469,17 @@ class Game:
   def render_menu(self, screen):
     pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
     pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
-    render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
+    render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,74,203))
     render_text(screen, self.font, "New Game", (310, 200, 300, 300))
     render_text(screen, self.font, "High Scores", (310, 250, 300, 300))
     render_text(screen, self.font, "Settings", (310, 300, 300, 300))
     render_text(screen, self.font, "Exit Game", (310, 350, 300, 300))
-    render_text(screen, self.font, "->", (280, 200 + self.m_selector * 50, 300, 300))
+    render_text(screen, self.font, "-", (280, 200 + self.m_selector * 50, 300, 300))
     
   def render_level_select(self, screen):
     render_black_bars(screen)  
-    render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,150,122))
-    render_text(screen, self.font, "Select a level...", (20,540,200,100), color=(255,150,122))
+    render_text(screen, self.font, "Vanessa's Mahjong", (20,20,300,300), color=(255,74,203))
+    render_text(screen, self.font, "Select a level...", (20,540,200,100), color=(255,74,203))
     i = 0
     levels = os.listdir(os.path.abspath('levels/'))
     for level in levels:
@@ -488,9 +490,9 @@ class Game:
       i += 1
     render_text(screen, self.font, "BACK", (310, 100, 300, 300))
     if self.m_selector == len(levels)-1:
-      render_text(screen, self.font, "->", (280, 100, 300, 300 ))
+      render_text(screen, self.font, "-", (280, 100, 300, 300 ))
     else:
-      render_text(screen, self.font, "->", (280, 200 + self.m_selector * 50, 300, 300 ))
+      render_text(screen, self.font, "-", (280, 200 + self.m_selector * 50, 300, 300 ))
       
   def render_paused(self,screen):
     self.render_playing(screen)
