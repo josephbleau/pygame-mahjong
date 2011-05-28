@@ -479,13 +479,17 @@ class Game:
         screen.blit(self.resources['play'], (760, 16, 32, 32))
         render_text(screen, self.font, "Paused", (470, 540, 100,100), color=(255,255,255))
 
-    if self.state == 'playing':
-      # Draw all of the tiles on the map.
-      for tile in self.tiles:
-        tile.draw(screen) 
-        if self.selected: 
-          pygame.draw.rect(screen, (255,0,0), (self.selected.x - self.selected.z * 3, \
-                                               self.selected.y - self.selected.z * 3, 40-2, 60-2),2)
+
+    # Draw all of the tiles on the map.
+    for tile in self.tiles:
+      if self.state == 'paused':
+        tile.draw(screen, paused=True)
+      else:
+        tile.draw(screen)
+ 
+      if self.selected: 
+        pygame.draw.rect(screen, (255,0,0), (self.selected.x - self.selected.z * 3, \
+                                             self.selected.y - self.selected.z * 3, 40-2, 60-2),2)
 
   def render_menu(self, screen):
     pygame.draw.rect(screen,(0,0,0), (0,0,800,80))

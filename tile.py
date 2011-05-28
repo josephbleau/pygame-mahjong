@@ -21,8 +21,14 @@ class Tile:
     self.y = y
     self.z = z
 
-  def draw(self, screen):
+  def draw(self, screen, paused=False):
     "Draw a tile the the screen"
+    if paused == True:
+      blank = pygame.image.load( os.path.abspath('res/tiles/template.png') )
+      rect = (self.x - self.z * 3, self.y - self.z * 3, 40, 60)
+      screen.blit(blank, rect)
+      return
+
     if self.img:
       rect = (self.x - self.z * 3, self.y - self.z * 3, 40, 60)
       screen.blit(self.img, rect)
