@@ -86,12 +86,16 @@ class Game:
     self.editor = editor                            # If the editor is running
     self.viewing_highscores_for = None              # Used in highscore view screen
     self.player_name = player_name                  # Current player's name
-    self.resources = { 'pause' : pygame.image.load(os.path.abspath('res/icons/pause.png')), \
-                       'back'  : pygame.image.load(os.path.abspath('res/icons/back.png')),  \
-                       'play'  : pygame.image.load(os.path.abspath('res/icons/play.png')),  \
-                       'sfx_select' : pygame.mixer.Sound( os.path.abspath('res/sfx/select.wav')), \
-                       'sfx_back'   : pygame.mixer.Sound( os.path.abspath('res/sfx/back.wav')),   \
-                       'sfx_switch' : pygame.mixer.Sound( os.path.abspath('res/sfx/switch.wav'))  }
+
+    self.resources = { 'pause'      : pygame.image.load(os.path.abspath('res/icons/pause.png')),     \
+                       'back'       : pygame.image.load(os.path.abspath('res/icons/back.png')),      \
+                       'play'       : pygame.image.load(os.path.abspath('res/icons/play.png')),      \
+                       'sound_on'   : pygame.image.load(os.path.abspath('res/icons/sound_on.png')),  \
+                       'sound_off'  : pygame.image.load(os.path.abspath('res/icons/sound_off.png')), \
+                       'sfx_select' : pygame.mixer.Sound( os.path.abspath('res/sfx/select.wav')),    \
+                       'sfx_back'   : pygame.mixer.Sound( os.path.abspath('res/sfx/back.wav')),      \
+                       'sfx_switch' : pygame.mixer.Sound( os.path.abspath('res/sfx/switch.wav'))     \
+    }
     
     # State-based render handling
     self.render_func = { 'playing'        : self.render_playing,         \
@@ -99,15 +103,19 @@ class Game:
                          'level_select'   : self.render_level_select,    \
                          'paused'         : self.render_paused,          \
                          'level_complete' : self.render_level_complete,  \
-                         'highscores'     : self.render_highscores }
-    
+                         'highscores'     : self.render_highscores       \
+    }
+
+
     # State-based input handling
-    self.input_handlers = { 'playing'        : self.handle_playing_input,       \
-                            'menu'           : self.handle_menu_input,          \
-                            'level_select'   : self.handle_level_select_input,  \
-                            'paused'         : self.handle_paused_input,        \
+    self.input_handlers = { 'playing'        : self.handle_playing_input,        \
+                            'menu'           : self.handle_menu_input,           \
+                            'level_select'   : self.handle_level_select_input,   \
+                            'paused'         : self.handle_paused_input,         \
                             'level_complete' : self.handle_level_complete_input, \
-                            'highscores'     : self.handle_highscores_input }
+                            'highscores'     : self.handle_highscores_input      \
+    }
+
     # If true then play sound
     #if self.sound_on:
      # pygame.mixer.music.load('res/sfx/Wish4U.mp3')
@@ -182,14 +190,17 @@ class Game:
       for i in range(4):
         if is_in(x,y,(310, 200+42*i, 250, 30)):
           if not i == self.m_selector:
-            self.resources['sfx_switch'].play()
+            if self.sound_on:
+             self.resources['sfx_switch'].play()
             self.m_selector = i
 
     if event.type == pygame.MOUSEBUTTONDOWN:
       x,y = pygame.mouse.get_pos()
+      self.sound_toggle_check(event)
       for i in range(5):
         if is_in(x,y,(310, 200+42*i, 250, 30)):
-          self.resources['sfx_select'].play()
+          if self.sound_on:
+            self.resources['sfx_select'].play()
           self.m_selector = i
           if i == 0:
             self.state = 'level_select'
@@ -203,21 +214,24 @@ class Game:
       
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_DOWN:
-        self.resources['sfx_switch'].play()
+        if self.sound_on:   
+          self.resources['sfx_switch'].play()
         if self.m_selector == 3:
           self.m_selector = 0
         else:
           self.m_selector += 1
           
       if event.key == pygame.K_UP:
-        self.resources['sfx_switch'].play()
+        if self.sound_on:
+          self.resources['sfx_switch'].play()
         if self.m_selector == 0:
           self.m_selector = 3
         else:
           self.m_selector -= 1
         
       if event.key == pygame.K_RETURN:
-        self.resources['sfx_select'].play()
+        if self.sound_on:
+          self.resources['sfx_select'].play()
         if self.m_selector == 0:
           self.state = 'level_select'
           self.m_selector = 0
@@ -229,13 +243,15 @@ class Game:
           sys.exit()
         
       if event.key == pygame.K_ESCAPE:
-        self.resources['sfx_back'].play()
+        if self.sound_on:
+          self.resources['sfx_back'].play()
         sys.exit()
           
   def handle_playing_input(self, event):
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_ESCAPE:
-        self.resources['sfx_back'].play()
+        if self.sound_on:
+          self.resources['sfx_back'].play()
         if not self.editor:
           self.state = 'level_select'
         else:
@@ -249,13 +265,16 @@ class Game:
       pauserect = (760, 16, 32, 32)
       x,y = event.pos
       if is_in(x,y,backrect):
-        self.resources['sfx_back'].play()
+        if self.sound_on:
+          self.resources['sfx_back'].play()
         self.state = 'level_select'
         return
       if is_in(x,y,pauserect):
         self.state = 'paused'
         self.paused_at = pygame.time.get_ticks()
         return
+
+      self.sound_toggle_check(event)
 
       # Iterate through tiles seing if we've clicked above any of them.
       # If we have, and it's deemed selectable, then select it. If we have and
@@ -311,12 +330,14 @@ class Game:
         x,y = pygame.mouse.get_pos()        
         if is_in(x,y,(310, 200 + i * 50, 300, 30)):
           if not i == self.m_selector:
-            self.resources['sfx_switch'].play()
+            if self.sound_on:
+              self.resources['sfx_switch'].play()
             self.m_selector = i
             return
       if is_in(x,y,(310, 100, 300, 30)):
         if not self.m_selector == len(levels):
-          self.resources['sfx_switch'].play()
+          if self.sound_on:
+            self.resources['sfx_switch'].play()
           self.m_selector = len(levels)
 
     if event.type == pygame.MOUSEBUTTONDOWN:
@@ -324,7 +345,8 @@ class Game:
         x,y = pygame.mouse.get_pos()        
         if is_in(x,y,(310, 200 + i * 50, 300, 42)):
           # True if they selected enter while BACK was highlighted.
-          self.resources['sfx_select'].play()
+          if self.sound_on:
+            self.resources['sfx_select'].play()
           self.state = 'playing'     
           self.time_started = pygame.time.get_ticks()
           self.pieces_removed = 0
@@ -333,18 +355,24 @@ class Game:
           self.start_piece_count = len(self.tiles)
 
       if is_in(x,y,(310, 100, 300, 84)):
-        self.resources['sfx_back'].play()
+        if self.sound_on:
+          self.resources['sfx_back'].play()
         self.state = 'menu'
         self.m_selector = 0
         return
 
+      self.sound_toggle_check(event)
+
     if event.type == pygame.KEYDOWN:
       if event.key == pygame.K_ESCAPE:
+        if self.sound_on:
+          self.resources['sfx_back'].play()
         self.state = 'menu'
         self.m_selector = 0
         return
       elif event.key == pygame.K_UP:
-        self.resources['sfx_switch'].play()
+        if self.sound_on:
+          self.resources['sfx_switch'].play()
         if self.m_selector == 0:
           self.m_selector = max
         else:
@@ -358,12 +386,14 @@ class Game:
       elif event.key == pygame.K_RETURN:
         # True if they selected enter while BACK was highlighted.
         if self.m_selector == max:
-          self.resources['sfx_back'].play()
+          if self.sound_on:
+            self.resources['sfx_back'].play()
           self.state = 'menu'
           self.m_selector = 0
           return
         
-        self.resources['sfx_select'].play()
+        if self.sound_on:
+          self.resources['sfx_select'].play()
         self.state = 'playing'     
         self.time_started = pygame.time.get_ticks()
         self.pieces_removed = 0
@@ -381,6 +411,9 @@ class Game:
       backrect  = (720, 16, 32, 32)
       pauserect = (760, 16, 32, 32)
       x,y = event.pos
+
+      self.sound_toggle_check(event)
+
       if is_in(x,y,backrect):
         self.state = 'level_select'
         
@@ -479,6 +512,7 @@ class Game:
         screen.blit(self.resources['play'], (760, 16, 32, 32))
         render_text(screen, self.font, "Paused", (470, 540, 100,100), color=(255,255,255))
 
+    self.blit_sound_icon(screen)
 
     # Draw all of the tiles on the map.
     for tile in self.tiles:
@@ -491,6 +525,17 @@ class Game:
         pygame.draw.rect(screen, (255,0,0), (self.selected.x - self.selected.z * 3, \
                                              self.selected.y - self.selected.z * 3, 40-2, 60-2),2)
 
+  def blit_sound_icon(self, screen):
+    if self.sound_on:
+      screen.blit(self.resources['sound_on'], (680, 16))
+    else:
+      screen.blit(self.resources['sound_off'], (680, 16))
+
+  def sound_toggle_check(self, event):
+    x,y = event.pos
+    if x >= 680 and x <= 712 and y >= 16 and y <= 48:
+      self.sound_on = not self.sound_on
+
   def render_menu(self, screen):
     pygame.draw.rect(screen,(0,0,0), (0,0,800,80))
     pygame.draw.rect(screen,(0,0,0), (0,520,800,80))   
@@ -500,6 +545,7 @@ class Game:
     render_text(screen, self.font, "Settings", (310, 300, 300, 300))
     render_text(screen, self.font, "Exit Game", (310, 350, 300, 300))
     render_text(screen, self.font, "-", (280, 200 + self.m_selector * 50, 300, 300))
+    self.blit_sound_icon(screen)
     
   def render_level_select(self, screen):
     render_black_bars(screen)  
@@ -517,7 +563,8 @@ class Game:
       render_text(screen, self.font, "-", (280, 100, 300, 300 ))
     else:
       render_text(screen, self.font, "-", (280, 200 + self.m_selector * 50, 300, 300 ))
-      
+    self.blit_sound_icon(screen)
+
   def render_paused(self,screen):
     self.render_playing(screen)
     
