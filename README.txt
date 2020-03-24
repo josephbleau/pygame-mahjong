@@ -1,4 +1,4 @@
-Vanessa's Mahjong is a Mahjong-esque game written in Python (2.7) using PyGame (latest, as of 5/17/2011).
+PyMahjong is a Mahjong-esque game written in Python (2.7) using PyGame (latest, as of 5/17/2011).
 
 To run the game simply point python at run_game.py or run_game.pyw.
 
